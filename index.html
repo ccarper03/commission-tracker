@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Commission Tracker</title>
+<style>
+  :root{
+    --navy:#0a2a4e; --navy2:#13497f; --blue:#2f6fb0; --accent:#1f9d55;
+    --accent2:#e8a020; --bg:#f4f6f9; --card:#ffffff; --line:#e2e8f0;
+    --text:#1a2433; --muted:#67748a; --red:#c0392b; --green:#1f9d55;
+    --shadow:0 1px 3px rgba(16,32,64,.08),0 4px 14px rgba(16,32,64,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--text);font-size:14px;line-height:1.45}
+  header{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:18px 24px;
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  header h1{font-size:18px;margin:0;letter-spacing:.3px;font-weight:600;display:flex;align-items:center;gap:10px}
+  header .sub{font-size:12px;opacity:.8;font-weight:400}
+  .wrap{max-width:1280px;margin:0 auto;padding:20px 24px 60px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+  button{font-family:inherit;font-size:13px;border:none;border-radius:8px;padding:9px 16px;cursor:pointer;
+    font-weight:600;transition:.15s;display:inline-flex;align-items:center;gap:6px}
+  .btn-primary{background:var(--accent);color:#fff}
+  .btn-primary:hover{background:#198047}
+  .btn-ghost{background:#fff;color:var(--navy);border:1px solid var(--line)}
+  .btn-ghost:hover{border-color:var(--blue);color:var(--blue)}
+  .btn-danger{background:#fff;color:var(--red);border:1px solid #f0c4bf}
+  .btn-danger:hover{background:var(--red);color:#fff}
+  .syncstat{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+  .syncstat.ok{color:#168048;font-weight:600}
+  .syncstat.warn{color:#9a6b00;font-weight:600}
+  .linkbtn{background:none;border:none;padding:0;font:inherit;font-size:11px;color:var(--blue);text-decoration:underline;cursor:pointer}
+  .helpstep{font-size:13.5px;line-height:1.5;padding:9px 0;border-top:1px solid var(--line)}
+  .helpstep:first-child{border-top:none}
+  .helpstep .pill{cursor:default}
+  /* Cards */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:24px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;box-shadow:var(--shadow)}
+  .card .label{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:600}
+  .card .value{font-size:24px;font-weight:700;margin-top:6px;color:var(--navy)}
+  .card .value.green{color:var(--green)}
+  .card .meta{font-size:11px;color:var(--muted);margin-top:4px}
+  .goalbar{height:7px;background:#eef1f5;border-radius:5px;margin-top:9px;overflow:hidden}
+  .goalbar > span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:5px}
+  /* Table */
+  .tablecard{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+  .tablecard .thead{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .tablecard .thead h2{font-size:14px;margin:0;font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:10px 12px;text-align:left;white-space:nowrap}
+  thead th{background:#f8fafc;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.4px;
+    font-weight:600;border-bottom:1px solid var(--line);position:sticky;top:0}
+  tbody tr{border-bottom:1px solid #eef1f5}
+  tbody tr:hover{background:#fafcff}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  .tag{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px}
+  .tag.presale{background:#eaf2ff;color:#1d5fb0}
+  .tag.regular{background:#eef1f5;color:#566}
+  .tag.cross{background:#fef0e1;color:#b5790f}
+  .tag.stretch{background:#e7f7ee;color:#168048}
+  .tag.osc{background:#f3eafe;color:#7c3aed}
+  .tag.jr{background:#fff3d6;color:#9a6b00}
+  /* Data status bar */
+  .datastatus{display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:9px 16px;border-radius:10px;margin-bottom:16px;font-size:13px;font-weight:600}
+  .datastatus.ok{background:#e7f7ee;color:#168048;border:1px solid #bfe8cf}
+  .datastatus.warn{background:#fff8e6;color:#9a6b00;border:1px solid #f2dca0}
+  .advbox{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:6px 18px;margin-bottom:18px}
+  .advrow{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 0;border-top:1px solid #eef1f5;flex-wrap:wrap}
+  .advrow:first-child{border-top:none}
+  .advtitle{font-size:13px;font-weight:700;color:var(--navy)}
+  .advsub{font-size:12px;color:var(--muted);margin-top:3px;max-width:560px;line-height:1.45}
+  .advbtns{display:flex;gap:8px;flex-wrap:wrap}
+  .advtag{font-size:10px;font-weight:600;background:#eef1f5;color:#566;padding:2px 7px;border-radius:20px;margin-left:6px;text-transform:uppercase;letter-spacing:.4px}
+  .pill{cursor:pointer;font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;border:1px solid transparent}
+  .pill.st-paid{background:#e7f7ee;color:#168048;border-color:#bfe8cf}
+  .pill.st-active{background:#eef6ff;color:#1d5fb0;border-color:#cfe2fb}
+  .pill.st-cancel{background:#f3f4f6;color:#8a93a3;border-color:#dfe3ea;text-decoration:line-through}
+  .pill:hover{filter:brightness(.97)}
+  .rowact{background:none;color:var(--muted);cursor:pointer;font-weight:700;padding:4px 8px;border-radius:6px}
+  .rowact:hover{background:#eef4ff;color:var(--blue)}
+  .rowname{cursor:pointer;border-bottom:1px dashed transparent}
+  .rowname:hover{color:var(--blue);border-bottom-color:var(--blue)}
+  .rowname:focus{outline:2px solid var(--blue);outline-offset:2px;border-radius:3px}
+  th.sortable{cursor:pointer;user-select:none} th.sortable:hover{color:var(--blue)}
+  .sarrow{font-size:9px;color:var(--blue)}
+  .cards2{display:flex;flex-wrap:wrap;gap:18px;margin:-12px 0 24px;padding:0 4px;font-size:12.5px;color:var(--muted)}
+  .cards2 b{color:var(--navy);font-weight:700}
+  .alltime{margin:20px 0 8px;padding:14px 4px 0;border-top:1px solid var(--line);align-items:center}
+  .atlabel{font-weight:700;color:var(--navy);text-transform:uppercase;font-size:11px;letter-spacing:.6px}
+  /* Year-history accordion */
+  .histlist{padding:4px 0}
+  .histyear{border-top:1px solid #eef1f5}
+  .histyear:first-child{border-top:none}
+  .histhead{width:100%;background:#fff;border:none;display:grid;grid-template-columns:24px 90px 1fr auto;align-items:center;gap:10px;
+    padding:14px 18px;cursor:pointer;text-align:left;font-family:inherit}
+  .histhead:hover{background:#fafcff}
+  .histyear.open .histhead{background:#f8fafc}
+  .hchev{color:var(--muted);font-size:12px}
+  .hylbl{font-size:15px;font-weight:700;color:var(--navy)}
+  .hstat{font-size:12.5px;color:var(--muted);font-weight:500}
+  .hcomm{font-size:14px;font-weight:700;color:var(--navy);text-align:right;font-variant-numeric:tabular-nums}
+  .hcomm small{display:block;font-size:10.5px;color:var(--muted);font-weight:400}
+  .histbody{padding:0 10px 12px;overflow-x:auto}
+  .histbody table{width:100%}
+  .histbody thead th{background:#f8fafc}
+  @media(max-width:640px){.histhead{grid-template-columns:20px 1fr;row-gap:4px}.hstat,.hcomm{grid-column:2}}
+  .card.hero{background:linear-gradient(135deg,#0a2a4e,#13497f);border:none}
+  .card.hero .label{color:#cfe0f5} .card.hero .value{color:#fff} .card.hero .value.green{color:#7ef0b0} .card.hero .meta{color:#cfe0f5}
+  .empty{padding:48px;text-align:center;color:var(--muted)}
+  td .net{font-weight:700;color:var(--navy)}
+  tr.totalrow{background:#f8fafc;border-top:2px solid var(--line)}
+  tr.totalrow td{padding-top:14px;padding-bottom:14px}
+  tr.totalrow .net{font-size:15px}
+  tr.totalrow:hover{background:#f8fafc}
+  .calcnote{font-size:10.5px;color:var(--muted);margin-top:2px;white-space:normal;max-width:240px}
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(10,24,44,.5);display:none;align-items:flex-start;justify-content:center;
+    padding:40px 16px;overflow:auto;z-index:50}
+  .overlay.show{display:flex}
+  .modal{background:#fff;border-radius:14px;width:100%;max-width:560px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .modal .mhead{padding:18px 22px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+  .modal .mhead h3{margin:0;font-size:16px}
+  .modal .mbody{padding:20px 22px}
+  .modal .mfoot{padding:16px 22px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:5px}
+  .field input,.field select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(47,111,176,.12)}
+  .toggles{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+  .tog{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:500}
+  .tog input{width:18px;height:18px;accent-color:var(--accent)}
+  .tog small{color:var(--muted);font-weight:400}
+  .livecalc{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:14px;margin-top:6px;font-size:13px}
+  .livecalc .row{display:flex;justify-content:space-between;padding:3px 0}
+  .livecalc .row.tot{border-top:1px dashed var(--line);margin-top:6px;padding-top:8px;font-weight:700;font-size:15px;color:var(--navy)}
+  .livecalc .row .neg{color:var(--red)}
+  .settings-row{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+  .hint{font-size:11px;color:var(--muted);margin-top:6px;line-height:1.4}
+  /* Forecast */
+  .fc{background:var(--card);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);margin-bottom:24px;overflow:hidden}
+  .fc .fchead{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line)}
+  .fc .fchead h2{font-size:14px;margin:0;font-weight:600;display:flex;align-items:center;gap:8px}
+  .fc .fchead .tot{font-size:13px;color:var(--muted)}
+  .fcgrid{display:flex;gap:0;overflow-x:auto;padding:4px}
+  .fcmonth{min-width:140px;flex:1;padding:14px 16px;border-right:1px solid #eef1f5}
+  .fcmonth:last-child{border-right:none}
+  .fcmonth .m{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:600}
+  .fcmonth .amt{font-size:19px;font-weight:700;color:var(--navy);margin-top:5px}
+  .fcmonth .cnt{font-size:11px;color:var(--muted);margin-top:2px}
+  .fcmonth.empty-m .amt{color:#cbd3de}
+  .fcbar{height:5px;background:#eef1f5;border-radius:4px;margin-top:8px;overflow:hidden}
+  .fcbar>span{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--accent));border-radius:4px}
+  .card.goalhit{background:#eafaf0;border-color:#bfe8cf}
+  .card.goalhit .value{color:var(--green)}
+  .fcmonth.mg{cursor:pointer;transition:background .12s}
+  .fcmonth.mg:hover{background:#fafcff}
+  .fcmonth.mg.hit{background:#eafaf0}
+  .fcmonth.mg.hit .fcbar>span{background:var(--accent)}
+  .fcmonth.mg.cur{box-shadow:inset 0 0 0 2px var(--blue)}
+  .fcmonth.gap{background:repeating-linear-gradient(45deg,#fff,#fff 7px,#fdf4f3 7px,#fdf4f3 14px);border-left:3px solid #f0c4bf}
+  .fcmonth.gap .amt{color:#d3a6a0;font-weight:600}
+  .fcmonth.gap .cnt{color:var(--red);font-weight:600}
+  .fcsplit{margin-top:6px;display:flex;flex-direction:column;gap:2px}
+  .fcline{font-size:11.5px;color:var(--muted);display:flex;align-items:center;gap:5px}
+  .fcline b{color:var(--navy);font-weight:700;margin-left:2px;font-variant-numeric:tabular-nums}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex:none}
+  .dot.e{background:var(--accent)} .dot.l{background:var(--accent2)}
+  .gapbox{margin:4px 12px 14px;background:#fffaf2;border:1px solid #f2dca0;border-radius:10px;padding:12px 14px}
+  .gaphd{font-size:12.5px;font-weight:700;color:#9a6b00;margin-bottom:8px}
+  .gaprow{padding:7px 0;border-top:1px dashed #f0dca8}
+  .gaprow:first-of-type{border-top:none}
+  .gapm{font-size:13px;font-weight:700;color:var(--navy)}
+  .gapno{font-weight:500;color:var(--red);font-size:11.5px}
+  .gapwin{font-size:12px;color:var(--muted);margin-top:2px} .gapwin b{color:var(--navy)}
+  .payout-readout{background:#eef6ff;border:1px solid #cfe2fb;border-radius:8px;padding:9px 11px;margin-top:-4px;margin-bottom:14px;font-size:12.5px;color:#1d5fb0;line-height:1.4}
+  .payout-readout.warn{background:#fffaf2;border-color:#f2dca0;color:#9a6b00}
+  .payout-readout b{color:var(--navy)}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}.value{font-size:20px}}
+  /* Toast */
+  #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#1a2433;color:#fff;padding:12px 22px;border-radius:30px;font-size:14px;font-weight:600;
+    box-shadow:0 4px 20px rgba(0,0,0,.35);opacity:0;transition:opacity .25s,transform .25s;z-index:999;
+    pointer-events:none;white-space:nowrap}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.error{background:#c0392b}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏠 Commission Tracker <span class="sub" id="hdrsub">Know what you'll get paid, and when</span></h1>
+  <div class="toolbar" style="margin:0">
+    <button class="btn-ghost" onclick="openHelp()" title="How this works">? Help</button>
+    <button class="btn-ghost" onclick="openSettings()">⚙ Goal &amp; Settings</button>
+    <button class="btn-primary" onclick="openDeal()">+ Add Sale</button>
+  </div>
+</header>
+
+<div id="toast"></div>
+
+<div class="wrap">
+  <div class="cards" id="cards"></div>
+
+  <div id="forecast"></div>
+
+  <div class="toolbar">
+    <button class="btn-primary" id="syncBtn" onclick="connectFile()" title="Connect your commission_data.json once — then it auto-saves to that file">🔗 Connect data file</button>
+    <span class="syncstat" id="syncStatus"></span>
+    <button class="btn-ghost" onclick="exportData()" title="Download a dated backup copy">⬇ Export backup</button>
+    <button class="btn-ghost" onclick="document.getElementById('jsonfile').click()" title="Load a .json file (restore / move machines)">⬆ Upload</button>
+    <input type="file" id="jsonfile" accept=".json" style="position:absolute;opacity:0;width:0;height:0;overflow:hidden" onchange="uploadData(event)">
+    <span style="flex:1"></span>
+    <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px">
+      Filter:
+      <select id="filter" onchange="ui.filter=this.value;saveUI();render()" style="padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px">
+        <option value="all">All</option>
+        <option value="active">Active (backlog)</option>
+        <option value="paid">Closed &amp; paid</option>
+        <option value="canceled">Canceled</option>
+        <option value="cross">Cross-sales</option>
+        <option value="presale">Presales</option>
+        <option value="junior">Junior-rep credits</option>
+        <option value="mentor">Mentor bonuses</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="tablecard">
+    <div class="thead">
+      <h2 id="ledgerTitle">Sales Ledger</h2>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input id="search" type="search" placeholder="Search buyer / lot / community"
+          oninput="ui.search=this.value;saveUI();render()"
+          style="padding:7px 11px;border:1px solid var(--line);border-radius:8px;font-size:13px;width:220px">
+        <span id="rowcount" style="font-size:12px;color:var(--muted)"></span>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Buyer / Lot</th>
+            <th class="sortable" onclick="setSort('pays')">Closes → Pays <span class="sarrow" data-k="pays"></span></th>
+            <th class="num sortable" onclick="setSort('price')">Sales Price <span class="sarrow" data-k="price"></span></th>
+            <th>Type / Flags</th>
+            <th class="num sortable" onclick="setSort('net')">Net Commission <span class="sarrow" data-k="net"></span></th>
+            <th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="history"></div>
+  <div id="alltime" class="cards2 alltime"></div>
+</div>
+
+<!-- Deal modal -->
+<div class="overlay" id="dealOverlay">
+  <div class="modal">
+    <div class="mhead"><h3 id="dealTitle">Add Sale</h3><button class="btn-ghost" onclick="closeDeal()">✕</button></div>
+    <div class="mbody">
+      <div class="field">
+        <label>Commission type</label>
+        <select id="f_basis" onchange="basisChange()">
+          <option value="standard">My sale — percentage commission</option>
+          <option value="junior">Junior-rep credit — flat bonus (I assisted another rep's sale)</option>
+          <option value="mentor">Mentor bonus — flat bonus (I mentored the rep; paid for their first 4 sales)</option>
+        </select>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Buyer name</label><input id="f_buyer" placeholder="e.g. Arvan"></div>
+        <div class="field"><label>Lot / HomeSite #</label><input id="f_lot" placeholder="e.g. 1131"></div>
+        <div class="field"><label>Sales Price ($)</label><input id="f_price" type="number" oninput="liveCalc()" placeholder="390800"></div>
+        <div class="field"><label>Community</label><input id="f_comm" list="commlist" placeholder="Collins Ridge">
+          <datalist id="commlist"><option value="Collins Ridge"><option value="Prestleigh"><option value="Belle Grove"></datalist></div>
+        <div class="field"><label>Date Sold</label><input id="f_sold" type="date" oninput="liveCalc()"></div>
+        <div class="field"><label>Est. Closing</label><input id="f_close" type="date" oninput="liveCalc()"></div>
+      </div>
+      <div class="payout-readout" id="payoutReadout" style="display:none"></div>
+      <!-- Junior / Mentor flat-bonus fields -->
+      <div class="grid2" id="jrFields" style="display:none">
+        <div class="field"><label id="f_seller_lbl">Rep you assisted</label><input id="f_seller" placeholder="e.g. Veronica Roanhouse"></div>
+        <div class="field"><label id="f_jramt_lbl">Flat bonus ($)</label><input id="f_jramt" type="number" oninput="liveCalc()" placeholder="500"></div>
+        <div class="field"><label>Payout date <small style="font-weight:400;color:var(--muted)">when it pays</small></label><input id="f_paydate" type="date" oninput="liveCalc()"></div>
+      </div>
+      <!-- Standard only -->
+      <div id="stdFields">
+      <div class="field">
+        <label>Sale Type</label>
+        <select id="f_type" onchange="liveCalc()">
+          <option value="regular">Regular sale — 1.75%</option>
+          <option value="presale">Presale (Stage 4 or below) — 2.0%</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Status flags</label>
+        <div class="toggles">
+          <label class="tog"><input type="checkbox" id="f_cross" onchange="liveCalc()"> Cross-sale <small id="crossHint">— 50% of commission (someone sent you the buyer)</small></label>
+          <label class="tog"><input type="checkbox" id="f_osc" onchange="liveCalc()"> OSC delivered the lead <small>— deduct the OSC fee ($500, or $250 on a cross)</small></label>
+          <label class="tog"><input type="checkbox" id="f_stretch" onchange="liveCalc()"> Stretch goal qualified <small>— +0.25% on sales after you hit the monthly goal</small></label>
+        </div>
+        <div class="hint" id="stretchHint"></div>
+      </div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Status</label>
+          <select id="f_status" onchange="statusChange()">
+            <option value="active">Active — sold, not closed yet (backlog)</option>
+            <option value="paid">Closed &amp; paid</option>
+            <option value="canceled">Canceled / fell through</option>
+          </select>
+        </div>
+        <div class="field" id="cancelWrap" style="display:none"><label>Cancel reason</label><input id="f_cancelnote" placeholder="e.g. financing fell through"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Manual adjustment ($) <small style="font-weight:400;color:var(--muted)">exceptions: + bonus / − fee</small></label>
+          <input id="f_adj" type="number" oninput="liveCalc()" placeholder="0"></div>
+        <div class="field"><label>Adjustment note</label><input id="f_adjnote" placeholder="e.g. referral bonus, manual fee"></div>
+      </div>
+      <div class="livecalc" id="livecalc"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn-danger" id="delBtn" style="visibility:hidden" onclick="deleteCurrent()">Delete</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn-ghost" onclick="closeDeal()">Cancel</button>
+        <button class="btn-primary" onclick="saveDeal()">Save Sale</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Help / intro modal -->
+<div class="overlay" id="helpOverlay">
+  <div class="modal" style="max-width:520px">
+    <div class="mhead"><h3>👋 How this works</h3><button class="btn-ghost" onclick="closeHelp()">✕</button></div>
+    <div class="mbody">
+      <div class="helpstep"><b>1 · Log every sale once.</b> Click <b>+ Add Sale</b>, enter the price, the date you sold it, and the estimated closing date. The app does all the commission math for you.</div>
+      <div class="helpstep"><b>2 · Track its status.</b> Leave it <span class="pill st-active">Active</span> while it's being built (that's your backlog). When it closes and you're paid, click the status to flip it to <span class="pill st-paid">Paid</span>. If it falls through, edit it to <span class="pill st-cancel">Canceled</span>.</div>
+      <div class="helpstep"><b>3 · See when you get paid.</b> The <b>Payout Forecast</b> shows your money by the month it actually lands — split into the <span style="color:var(--accent);font-weight:700">15th</span> paycheck and the <span style="color:var(--accent2);font-weight:700">end-of-month</span> paycheck. Empty months are income gaps, and it tells you the closing dates that would fill them.</div>
+      <div class="helpstep"><b>4 · Keep your data safe (do this once).</b> Click <b>🔗 Connect data file</b> and pick <code>commission_data.json</code>. After that everything saves to that file automatically and is never lost — even if your browser clears. <b>Export backup</b> makes a spare copy anytime.</div>
+      <div class="helpstep"><b>5 · Set your goals.</b> Click the <b>Monthly</b> or <b>Annual Goal</b> card (or ⚙ Settings) to set your targets — the company's number or your own.</div>
+      <div class="hint" style="margin-top:10px">Tip: a <b>cross-sale</b> is half the commission. <b>OSC</b> means the online team gave you the lead (a fee comes out). <b>Stretch</b> is the +0.25% you check when a full sale puts you past your monthly goal. Hover any field for a quick explanation.</div>
+    </div>
+    <div class="mfoot" style="justify-content:flex-end">
+      <button class="btn-primary" onclick="closeHelp()">Got it</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings modal -->
+<div class="overlay" id="setOverlay">
+  <div class="modal" style="max-width:460px">
+    <div class="mhead"><h3>Goal & Settings</h3><button class="btn-ghost" onclick="closeSettings()">✕</button></div>
+    <div class="mbody">
+      <div class="settings-row">
+        <div class="field" style="flex:1">
+          <label>Monthly sales goal</label>
+          <input id="s_mgoal" type="number" value="3">
+        </div>
+        <div class="field" style="flex:1">
+          <label>Annual sales goal</label>
+          <input id="s_agoal" type="number" value="24">
+        </div>
+      </div>
+      <div class="field">
+        <label>Annual goal year starts in</label>
+        <select id="s_ystart">
+          <option value="1">January (calendar year)</option>
+          <option value="2">February</option><option value="3">March</option>
+          <option value="4">April</option><option value="5">May</option>
+          <option value="6">June</option><option value="7">July</option>
+          <option value="8">August</option><option value="9">September</option>
+          <option value="10">October</option><option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+      </div>
+      <div class="hint">Stretch is tracked <b>per calendar month</b>: once you hit the monthly goal, the next personal sale that month earns +0.25% (auto-flagged, override per sale). The <b>annual goal</b> runs on a year that starts in the month above — set it to your review/anniversary month if it isn't January. Year History below keeps every past year automatically.</div>
+
+      <button class="btn-ghost" onclick="toggleRates()" id="ratesBtn" style="width:100%;justify-content:center;margin:6px 0 4px">Rates &amp; fees (rarely change) ▾</button>
+      <div id="ratesPanel" style="display:none">
+        <div class="settings-row">
+          <div class="field" style="flex:1"><label>Regular rate (%)</label><input id="s_reg" type="number" step="0.001" value="1.75"></div>
+          <div class="field" style="flex:1"><label>Presale rate (%)</label><input id="s_pre" type="number" step="0.001" value="2.0"></div>
+        </div>
+        <div class="settings-row">
+          <div class="field" style="flex:1"><label>Stretch bonus (%)</label><input id="s_stretch" type="number" step="0.001" value="0.25"></div>
+          <div class="field" style="flex:1"><label>OSC fee ($)</label><input id="s_osc" type="number" value="500"></div>
+        </div>
+        <div class="settings-row">
+          <div class="field" style="flex:1"><label>Junior-rep bonus ($)</label><input id="s_junior" type="number" value="500"></div>
+          <div class="field" style="flex:1"><label>Mentor bonus ($)</label><input id="s_mentor" type="number" value="500"></div>
+        </div>
+        <div class="hint">Cross-sale pays <b>50% of the commission</b> (someone sent you the buyer). OSC fee is $500 — deducted in full on a regular sale, or split to $250 on a cross-sale (both reps share it). Junior-rep = flat credit when you assist another rep's sale. Mentor = flat bonus per mentee sale (their first 4). All default to DRH Raleigh values; override per entry where needed.</div>
+      </div>
+    </div>
+    <div class="mfoot" style="justify-content:flex-end">
+      <button class="btn-primary" onclick="saveSettings()">Save Settings</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Storage ---------- */
+const LS_DEALS='ct_deals_v1', LS_SET='ct_settings_v1';
+let deals = load(LS_DEALS, null);
+if(deals===null){ // first run: seed with sample lots from the DRH tracker
+  deals = [
+    {id:uid_seed('a'),buyer:'',lot:'1131',community:'Collins Ridge',price:390800,
+     dateSold:'2026-05-06',estClose:'2026-06-30',type:'regular',cross:false,osc:false,
+     adj:0,adjNote:'',paid:false,_seq:1},
+    {id:uid_seed('b'),buyer:'',lot:'84',community:'Collins Ridge',price:426990,
+     dateSold:'2026-05-26',estClose:'2027-01-30',type:'regular',cross:false,osc:false,
+     adj:0,adjNote:'',paid:false,_seq:2},
+    {id:uid_seed('c'),basis:'junior',buyer:'Hassan Barati',lot:'89',community:'Belle Grove',
+     price:339990,dateSold:'2026-03-26',estClose:'',type:'regular',cross:false,osc:false,
+     sellingRep:'Veronica Roanhouse',juniorAmt:500,adjNote:'Darwin A2 · junior-rep credit',
+     adj:0,paid:false,_seq:0}
+  ];
+  localStorage.setItem(LS_DEALS,JSON.stringify(deals));
+}
+// one-time injection of the Belle Grove junior-rep credit for installs seeded before it existed
+if(!localStorage.getItem('ct_seed_jr')){
+  if(!deals.some(d=>d.id==='seed_c')){
+    deals.push({id:'seed_c',basis:'junior',buyer:'Hassan Barati',lot:'89',community:'Belle Grove',
+      price:339990,dateSold:'2026-03-26',estClose:'',type:'regular',cross:false,osc:false,
+      sellingRep:'Veronica Roanhouse',juniorAmt:500,adjNote:'Darwin A2 · junior-rep credit',adj:0,paid:false,_seq:0});
+    localStorage.setItem(LS_DEALS,JSON.stringify(deals));
+  }
+  localStorage.setItem('ct_seed_jr','1');
+}
+function uid_seed(s){return 'seed_'+s}
+let settings = Object.assign({
+  monthlyGoal:3, annualGoal:24, yearStartMonth:1, monthGoals:{}, regRate:1.75, preRate:2.0, stretchRate:0.25,
+  oscFee:500, juniorBonus:500, mentorBonus:500
+}, load(LS_SET, {}));
+// migrate older saves: 'goal' (+ optional 'period') → monthlyGoal
+if(settings.monthlyGoal==null && settings.goal!=null) settings.monthlyGoal=settings.goal;
+if(settings.mentorBonus==null) settings.mentorBonus=500;
+if(settings.annualGoal==null) settings.annualGoal=24;
+if(settings.yearStartMonth==null) settings.yearStartMonth=1;
+if(settings.monthGoals==null) settings.monthGoals={};
+// migrate deals: paid(bool) → status; stretch is now a manual boolean
+deals.forEach(d=>{ if(!d.status) d.status = d.paid ? 'paid' : 'active'; if(d.stretch===undefined) d.stretch = (d.stretchOverride===true); });
+localStorage.setItem(LS_DEALS,JSON.stringify(deals));
+// status helpers
+function dealStatus(d){ return d.status || (d.paid?'paid':'active'); }
+function isCanceled(d){ return dealStatus(d)==='canceled'; }
+function isPaid(d){ return dealStatus(d)==='paid'; }
+function isActive(d){ return dealStatus(d)==='active'; }
+// persisted UI state (filter / search / sort)
+const LS_UI='ct_ui_v1';
+let ui = Object.assign({filter:'all',search:'',sortKey:'date',sortDir:'desc'}, load(LS_UI,{}));
+function saveUI(){ localStorage.setItem(LS_UI,JSON.stringify(ui)); }
+let editingId = null;
+
+function load(k,d){try{const v=JSON.parse(localStorage.getItem(k));return v??d}catch(e){return d}}
+function save(){localStorage.setItem(LS_DEALS,JSON.stringify(deals));localStorage.setItem(LS_SET,JSON.stringify(settings));fileSave();}
+function dataPayload(){return JSON.stringify({app:'commission-tracker',version:1,savedAt:new Date().toISOString(),settings,deals},null,2);}
+
+/* ---------- Auto-sync to ONE data file (File System Access API) ----------
+   Connect once to commission_data.json; every change then writes straight to that
+   file, and it reloads from the file on future visits — so clearing the browser
+   never loses anything. The file in your folder is the single source of truth.
+   Export makes a dated backup copy. Chrome/Edge only; elsewhere it's browser-only. */
+let fileHandle=null, fileSaving=false, filePending=false;
+const FS_OK = ('showSaveFilePicker' in window);
+function idb(){return new Promise((res,rej)=>{const r=indexedDB.open('ct_fs',1);
+  r.onupgradeneeded=()=>r.result.createObjectStore('h');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);});}
+async function idbSet(k,v){const db=await idb();return new Promise((res,rej)=>{const t=db.transaction('h','readwrite');t.objectStore('h').put(v,k);t.oncomplete=()=>res();t.onerror=()=>rej(t.error);});}
+async function idbGet(k){const db=await idb();return new Promise((res,rej)=>{const t=db.transaction('h','readonly');const rq=t.objectStore('h').get(k);rq.onsuccess=()=>res(rq.result);rq.onerror=()=>rej(rq.error);});}
+async function writeHandle(h){const w=await h.createWritable();await w.write(dataPayload());await w.close();}
+
+async function connectFile(){
+  if(!FS_OK){ toast('This browser can’t auto-sync — use Export for backups, or open in Chrome/Edge',true); return; }
+  try{
+    fileHandle=await window.showSaveFilePicker({suggestedName:'commission_data.json',
+      types:[{description:'Commission data',accept:{'application/json':['.json']}}]});
+    // if the chosen file already has data, load it; otherwise seed it with current data
+    try{ const f=await fileHandle.getFile(); const txt=await f.text();
+      if(txt.trim()){ const j=JSON.parse(txt); if(Array.isArray(j.deals)) deals=j.deals; if(j.settings) settings=Object.assign(settings,j.settings); deals.forEach(d=>{ if(!d.status) d.status=d.paid?'paid':'active'; }); }
+    }catch(_){}
+    await writeHandle(fileHandle); await idbSet('handle',fileHandle);
+    localStorage.setItem(LS_DEALS,JSON.stringify(deals)); localStorage.setItem(LS_SET,JSON.stringify(settings));
+    updateSyncUI('connected'); render(); toast('✓ Synced to your data file');
+  }catch(e){ if(e.name!=='AbortError') toast('Could not connect file: '+e.message,true); }
+}
+async function fileSave(){
+  if(!fileHandle) return;
+  if(fileSaving){ filePending=true; return; }
+  fileSaving=true;
+  try{
+    const p=await fileHandle.queryPermission({mode:'readwrite'});
+    if(p!=='granted'){ updateSyncUI('reconnect'); fileSaving=false; return; }
+    await writeHandle(fileHandle); updateSyncUI('connected');
+  }catch(e){ updateSyncUI('reconnect'); }
+  fileSaving=false;
+  if(filePending){ filePending=false; fileSave(); }
+}
+async function tryReconnect(){
+  if(!FS_OK) return;
+  try{
+    const h=await idbGet('handle'); if(!h){ updateSyncUI('local'); return; }
+    fileHandle=h;
+    const p=await h.queryPermission({mode:'readwrite'});
+    if(p==='granted'){ await loadFromFile(); updateSyncUI('connected'); render(); }
+    else updateSyncUI('reconnect');
+  }catch(e){ updateSyncUI('local'); }
+}
+async function reconnectGrant(){
+  if(!fileHandle) return connectFile();
+  try{ const p=await fileHandle.requestPermission({mode:'readwrite'});
+    if(p==='granted'){ await loadFromFile(); updateSyncUI('connected'); render(); }
+  }catch(e){ updateSyncUI('reconnect'); }
+}
+async function loadFromFile(){
+  try{ const f=await fileHandle.getFile(); const txt=await f.text(); if(!txt.trim()) return;
+    const j=JSON.parse(txt);
+    if(Array.isArray(j.deals)) deals=j.deals;
+    if(j.settings) settings=Object.assign(settings,j.settings);
+    deals.forEach(d=>{ if(!d.status) d.status=d.paid?'paid':'active'; });
+    localStorage.setItem(LS_DEALS,JSON.stringify(deals)); localStorage.setItem(LS_SET,JSON.stringify(settings));
+  }catch(e){ console.warn('file load failed',e); }
+}
+async function disconnectFile(){ fileHandle=null; try{ await idbSet('handle',null); }catch(_){} updateSyncUI('local'); }
+
+function updateSyncUI(state){
+  const btn=document.getElementById('syncBtn'), st=document.getElementById('syncStatus');
+  if(!btn||!st) return;
+  if(state==='connected'){
+    btn.style.display='none';
+    st.className='syncstat ok';
+    st.innerHTML='✓ Synced to your data file <button class="linkbtn" onclick="disconnectFile()">stop</button>';
+  } else if(state==='reconnect'){
+    btn.style.display='none';
+    st.className='syncstat warn';
+    st.innerHTML='⚠ Reconnect your data file <button class="linkbtn" onclick="reconnectGrant()">reconnect</button>';
+  } else {
+    btn.style.display = FS_OK ? '' : 'none';
+    st.className='syncstat';
+    st.textContent = FS_OK ? 'Not synced — saving in this browser only' : 'Saving in this browser (file sync needs Chrome or Edge)';
+  }
+}
+
+async function exportData(){
+  const fname='commission_data_backup_'+new Date().toISOString().slice(0,10)+'.json';
+  const blob=new Blob([dataPayload()],{type:'application/json'});
+  const file=new File([blob],fname,{type:'application/json'});
+  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file],title:'Commission data backup'}); return; }
+    catch(e){ if(e.name==='AbortError') return; }
+  }
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+  toast('✓ Backup downloaded — '+fname);
+}
+function uploadData(e){
+  const file=e.target.files[0]; if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{ try{
+    const j=JSON.parse(r.result);
+    const incoming=Array.isArray(j.deals)?j.deals.length:0;
+    if(deals.length>0 && !confirm(`This replaces your current ${deals.length} entr${deals.length===1?'y':'ies'} with the ${incoming} in this file.\n\nExport a backup first if unsure. Replace now?`)){ e.target.value=''; return; }
+    if(Array.isArray(j.deals)) deals=j.deals;
+    if(j.settings) settings=Object.assign(settings,j.settings);
+    deals.forEach(d=>{ if(!d.status) d.status=d.paid?'paid':'active'; });
+    save(); render(); toast('✓ Loaded '+deals.length+' entr'+(deals.length===1?'y':'ies'));
+  }catch(err){ toast('Could not read file: '+err.message, true); } };
+  r.readAsText(file); e.target.value='';
+}
+let _toastTimer=null;
+function toast(msg,isErr){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='show'+(isErr?' error':'');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>{ el.className=''; },3200);
+}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function money(n){return (n<0?'-$':'$')+Math.abs(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}
+function pct(n){return n.toLocaleString('en-US',{maximumFractionDigits:3})+'%'}
+
+/* ---------- Goal helpers ----------
+   Stretch goal is evaluated PER CALENDAR MONTH: after you hit the monthly
+   goal, the next personal sale that month onward earns +0.25%. The annual
+   goal is a separate high-level number (does not drive stretch).
+   Flat bonuses (junior / mentor) are NOT personal sales — they don't count
+   toward either goal and never earn stretch. */
+function isFlat(deal){ return deal.basis==='junior' || deal.basis==='mentor'; }
+function monthKeyStr(dateStr){
+  if(!dateStr) return null;
+  const d=new Date(dateStr+'T00:00'); if(isNaN(d)) return null;
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+// ordinal of this deal among personal sales in its calendar month (by date sold)
+function ordinalInMonth(deal){
+  const key=monthKeyStr(deal.dateSold);
+  if(key===null) return null;
+  const peers=deals.filter(d=>monthKeyStr(d.dateSold)===key && !isFlat(d))
+    .sort((a,b)=> (a.dateSold||'').localeCompare(b.dateSold||'') || (a._seq||0)-(b._seq||0));
+  return peers.findIndex(d=>d.id===deal.id)+1;
+}
+function autoStretchEligible(deal){
+  if(isFlat(deal)) return false;
+  if(Number(settings.monthlyGoal)<=0) return false;
+  const ord=ordinalInMonth(deal);
+  return ord!==null && ord>Number(settings.monthlyGoal);
+}
+// fiscal-year window (annual goal year start) containing a given date
+function fyWindow(date){
+  const ysm=Number(settings.yearStartMonth)||1;
+  let y=date.getFullYear(); if(date.getMonth()+1<ysm) y-=1;
+  return {start:new Date(y,ysm-1,1), end:new Date(y+1,ysm-1,1), year:y};
+}
+function dealYearDate(d){ const ds=isFlat(d)?d.payDate:d.dateSold; if(!ds) return null; const dt=new Date(ds+'T00:00'); return isNaN(dt)?null:dt; }
+// Sales count toward goals: a full sale = 1, a cross-sale = 0.5; flat bonuses & canceled = 0.
+function saleWeight(d){ if(isFlat(d)||isCanceled(d)) return 0; return d.cross?0.5:1; }
+function fmtCount(n){ return Number.isInteger(n)?String(n):n.toFixed(1); }
+function goalForMonth(key){ const o=settings.monthGoals||{}; return (o[key]!=null)?Number(o[key]):(Number(settings.monthlyGoal)||0); }
+function weightedInMonth(key){ return deals.filter(d=>!isFlat(d) && monthKeyStr(d.dateSold)===key).reduce((s,d)=>s+saleWeight(d),0); }
+// edit a single month's goal / the annual goal
+function editMonthGoal(key,label){
+  const cur=goalForMonth(key);
+  const v=prompt('Sales goal for '+label+' — leave blank to use your default of '+settings.monthlyGoal, cur);
+  if(v===null) return;
+  settings.monthGoals=settings.monthGoals||{};
+  if(String(v).trim()===''){ delete settings.monthGoals[key]; }
+  else { const n=Number(v); if(!(n>=0)){ toast('Enter a number',true); return; } settings.monthGoals[key]=n; }
+  save(); render();
+}
+function editAnnualGoal(){
+  const v=prompt('Annual sales goal — use the company goal or set your own:', settings.annualGoal);
+  if(v===null) return; const n=Number(v); if(!(n>=0)){ toast('Enter a number',true); return; }
+  settings.annualGoal=n; save(); render();
+}
+function fyLabelFor(win){
+  const ysm=Number(settings.yearStartMonth)||1;
+  if(ysm===1) return String(win.year);
+  return win.start.toLocaleDateString('en-US',{month:'short',year:'2-digit'})+'–'+new Date(win.end.getTime()-1).toLocaleDateString('en-US',{month:'short',year:'2-digit'});
+}
+
+/* ---------- Payout-timing engine (DR Horton Raleigh pay calendar) ----------
+   Closing dated 11th–25th  → paid the 15th of NEXT month        (early)
+   Closing dated 26th–end   → paid the LAST DAY of NEXT month     (end)
+   Closing dated  1st–10th  → paid the LAST DAY of the SAME month (end)
+   Commission sheet must be uploaded by the period deadline or the payout
+   slips a full cycle. Deadlines: closings 11–25 → sheet due 25th of that
+   month; closings 26–10 → sheet due 10th of the pay month. */
+function payoutInfo(closeStr){
+  if(!closeStr) return null;
+  const d=new Date(closeStr+'T00:00'); if(isNaN(d)) return null;
+  const day=d.getDate(); let py=d.getFullYear(), pm=d.getMonth(); // pm 0-based
+  let type;
+  if(day>=11 && day<=25){ pm+=1; type='early'; }
+  else if(day>=26){ pm+=1; type='end'; }
+  else { type='end'; } // day 1–10, same month
+  py += Math.floor(pm/12); pm=((pm%12)+12)%12;
+  const date = type==='early' ? new Date(py,pm,15) : new Date(py,pm+1,0);
+  // commission-sheet upload deadline for this closing
+  let dl;
+  if(day>=11 && day<=25) dl=new Date(d.getFullYear(),d.getMonth(),25);
+  else dl=new Date(py,pm,10); // pay-month 10th for the 26–10 window
+  return {date, type, deadline:dl, key:py+'-'+String(pm+1).padStart(2,'0')};
+}
+function monthKey(dt){return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');}
+function fmtShort(dt){return dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});}
+// Closing windows that PAY INTO a given month (year, month0).
+// early bucket (15th)  ← close 11–25 of the PRIOR month
+// end bucket (last day)← close 26 of prior month through 10 of this month
+function windowsForPayMonth(y,m0){
+  const prev=new Date(y,m0-1,1);
+  const early={from:new Date(prev.getFullYear(),prev.getMonth(),11), to:new Date(prev.getFullYear(),prev.getMonth(),25)};
+  const end={from:new Date(prev.getFullYear(),prev.getMonth(),26), to:new Date(y,m0,10)};
+  return {early,end};
+}
+// Unified payout for ANY deal. Standard sales derive it from the closing date;
+// flat bonuses (junior/mentor) carry a direct payout date the rep enters.
+function dealPayout(d){
+  if(isFlat(d)){
+    if(!d.payDate) return null;
+    const dt=new Date(d.payDate+'T00:00'); if(isNaN(dt)) return null;
+    return {date:dt, type: dt.getDate()<=15?'early':'end', deadline:null, key:monthKey(dt)};
+  }
+  return payoutInfo(d.estClose);
+}
+
+/* ---------- Commission engine ---------- */
+function compute(deal){
+  const adj = Number(deal.adj)||0;
+  // Flat bonuses — Junior-rep (you assisted another rep's sale, experience credit)
+  // and Mentor (you mentored a rep; $500 per their sale). Both default $500.
+  if(isFlat(deal)){
+    const def = deal.basis==='mentor' ? settings.mentorBonus : settings.juniorBonus;
+    const bonus = (deal.juniorAmt!=null && deal.juniorAmt!=='') ? Number(deal.juniorAmt) : def;
+    return {basis:deal.basis, baseRate:0, rate:null, gross:bonus, afterSplit:bonus,
+            oscDed:0, adj, net:bonus+adj, stretchOn:false, bonus};
+  }
+  const price=Number(deal.price)||0;
+  let baseRate = deal.type==='presale' ? settings.preRate : settings.regRate;
+  const stretchOn = deal.stretch;               // resolved boolean
+  let rate = baseRate + (stretchOn ? settings.stretchRate : 0);
+  let gross = price * rate/100;                  // full commission at effective rate
+  // Cross-sale: always 50% of the commission (someone else sent you the buyer).
+  let afterSplit = deal.cross ? gross/2 : gross;
+  let oscDed = 0;
+  if(deal.osc){
+    // OSC fee is $500; on a cross-sale both reps split it, so your share is $250.
+    oscDed = deal.cross ? settings.oscFee/2 : settings.oscFee;
+  }
+  const net = afterSplit - oscDed + adj;
+  return {basis:'standard', baseRate, rate, gross, afterSplit, oscDed, adj, net, stretchOn};
+}
+
+/* ---------- Render ---------- */
+function render(){
+  // stretch is a manual flag set per sale
+  deals.forEach(d=>{ if(typeof d.stretch!=='boolean') d.stretch=!!d.stretch; });
+
+  const filter=ui.filter;
+  const q=(ui.search||'').trim().toLowerCase();
+  const effDate=d=>d.dateSold||d.payDate||'';
+  const payTime=d=>{const p=dealPayout(d);return p?+p.date:0;};
+  // the main ledger tracks only the CURRENT year (undated entries kept so they're not lost)
+  const curWin=fyWindow(new Date());
+  const inThisYear=d=>{ const dt=dealYearDate(d); return !dt || (dt>=curWin.start && dt<curWin.end); };
+  const yrLabel=fyLabelFor(curWin);
+  const curYearCount=deals.filter(inThisYear).length;
+  let rows=deals.filter(d=>{
+    if(!inThisYear(d)) return false;
+    if(filter==='active') return isActive(d);
+    if(filter==='paid') return isPaid(d);
+    if(filter==='canceled') return isCanceled(d);
+    if(filter==='cross') return d.cross;
+    if(filter==='presale') return d.type==='presale';
+    if(filter==='junior') return d.basis==='junior';
+    if(filter==='mentor') return d.basis==='mentor';
+    return true; // all (this year)
+  });
+  if(q) rows=rows.filter(d=>((d.buyer||'')+' '+(d.lot||'')+' '+(d.community||'')+' '+(d.sellingRep||'')).toLowerCase().includes(q));
+  // sort
+  const dir=ui.sortDir==='asc'?1:-1;
+  rows.sort((a,b)=>{
+    let av,bv;
+    if(ui.sortKey==='price'){ av=Number(a.price)||0; bv=Number(b.price)||0; }
+    else if(ui.sortKey==='net'){ av=compute(a).net; bv=compute(b).net; }
+    else if(ui.sortKey==='pays'){ av=payTime(a); bv=payTime(b); }
+    else { av=effDate(a); bv=effDate(b); return av.localeCompare(bv)*dir; }
+    return (av-bv)*dir;
+  });
+  // sort arrows
+  document.querySelectorAll('.sarrow').forEach(s=>{ s.textContent = (s.dataset.k===ui.sortKey)?(ui.sortDir==='asc'?'▲':'▼'):''; });
+
+  const tb=document.getElementById('tbody');
+  tb.innerHTML='';
+  if(rows.length===0){
+    tb.innerHTML='<tr><td colspan="7" class="empty">'+(deals.length? 'Nothing for this year matches. Past years are in Year History below.' : 'No sales yet. Click <b>+ Add Sale</b> (top right) to log your first one.<br><span style="font-size:12px">New here? Click <b>? Help</b> for a 30-second tour.</span>')+'</td></tr>';
+  }
+  rows.forEach(d=>{
+    const c=compute(d);
+    const isJr = isFlat(d);
+    const canceled = isCanceled(d);
+    const flags=[];
+    if(isJr){ flags.push('<span class="tag jr">'+(d.basis==='mentor'?'Mentor':'Junior Rep')+' $'+(c.bonus)+'</span>'); }
+    else {
+      flags.push(`<span class="tag ${d.type==='presale'?'presale':'regular'}">${d.type==='presale'?'Presale':'Regular'}</span>`);
+      if(d.cross) flags.push('<span class="tag cross">Cross 50%</span>');
+      if(d.osc) flags.push('<span class="tag osc">OSC</span>');
+      if(c.stretchOn) flags.push('<span class="tag stretch">Stretch +'+settings.stretchRate+'%</span>');
+    }
+    if(d.community) flags.push('<span class="tag regular">'+esc(d.community)+'</span>');
+    const sub=[];
+    if(d.lot) sub.push('Lot '+esc(d.lot));
+    if(isJr && d.sellingRep) sub.push((d.basis==='mentor'?'mentee ':'with ')+esc(d.sellingRep));
+    if(c.adj) sub.push((c.adj<0?'−':'+')+money(Math.abs(c.adj))+(d.adjNote?' '+esc(d.adjNote):''));
+    if(canceled && d.cancelNote) sub.push('canceled: '+esc(d.cancelNote));
+    // Closes → Pays column
+    const p=dealPayout(d);
+    let dateCell;
+    if(isJr) dateCell = p?('<span class="tag jr" style="font-size:9px">pays</span> '+fmtDate(d.payDate)):'<span style="color:#bbb">—</span>';
+    else dateCell = (d.estClose?fmtDate(d.estClose):'<span style="color:#bbb">—</span>') + (p?` <span style="color:var(--muted)">→</span> <b>${fmtShort(p.date)}</b>`:'');
+    // status pill
+    const stMap={active:['Active','st-active'],paid:['Paid','st-paid'],canceled:['Canceled','st-cancel']};
+    const st=stMap[dealStatus(d)];
+    const netCell = canceled
+      ? '<span class="net" style="text-decoration:line-through;color:#bbb">'+money(c.net)+'</span><div class="calcnote">canceled — not counted</div>'
+      : '<span class="net">'+money(c.net)+'</span>'+(c.oscDed?`<div class="calcnote">${money(c.afterSplit)} − ${money(c.oscDed)} OSC</div>`:'');
+    const tr=document.createElement('tr');
+    if(canceled) tr.style.opacity='.6';
+    tr.innerHTML=`
+      <td><b class="rowname" tabindex="0" role="button" title="Edit" onclick="openDeal('${d.id}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openDeal('${d.id}')}">${esc(d.buyer||d.lot||'—')}</b>${sub.length?`<div class="calcnote">${sub.join(' · ')}</div>`:''}</td>
+      <td>${dateCell}</td>
+      <td class="num">${isJr?'<span style="color:#bbb">—</span>':money(Number(d.price)||0)}</td>
+      <td>${flags.join(' ')}</td>
+      <td class="num">${netCell}</td>
+      <td><button class="pill ${st[1]}" aria-label="Status: ${st[0]}. Click to change." onclick="cycleStatus('${d.id}')">${st[0]}</button></td>
+      <td><button class="rowact" title="Edit" aria-label="Edit" onclick="openDeal('${d.id}')">✎</button></td>`;
+    tb.appendChild(tr);
+  });
+  // ---- totals footer (excludes canceled) ----
+  const live=rows.filter(d=>!isCanceled(d));
+  if(live.length){
+    const totNet  = live.reduce((s,d)=>s+compute(d).net,0);
+    const totOSC  = live.reduce((s,d)=>s+compute(d).oscDed,0);
+    const totFlat = live.filter(d=>isFlat(d)).reduce((s,d)=>s+compute(d).bonus,0);
+    const totPrice= live.reduce((s,d)=>s+(isFlat(d)?0:(Number(d.price)||0)),0);
+    const flatN=live.filter(d=>isFlat(d)).length;
+    const subbits=[];
+    if(totFlat) subbits.push('incl. +'+money(totFlat)+' Junior/Mentor bonuses ('+flatN+')');
+    if(totOSC)  subbits.push('−'+money(totOSC)+' OSC fees');
+    const scope = (ui.filter==='all' && !ui.search) ? yrLabel+' · this year' : 'filtered view';
+    const tr=document.createElement('tr'); tr.className='totalrow';
+    tr.innerHTML=`
+      <td><b>Totals</b> <span style="font-weight:400;color:var(--muted);font-size:11px">${scope} (${live.length})</span>${subbits.length?`<div class="calcnote">${subbits.join(' · ')}</div>`:''}</td>
+      <td></td>
+      <td class="num">${money(totPrice)}</td>
+      <td></td>
+      <td class="num"><span class="net">${money(totNet)}</span></td>
+      <td></td><td></td>`;
+    tb.appendChild(tr);
+  }
+  document.getElementById('rowcount').textContent=rows.length+' of '+curYearCount+' this year';
+  const lt=document.getElementById('ledgerTitle'); if(lt) lt.textContent=yrLabel+' Ledger';
+  renderCards();
+  renderForecast();
+  renderHistory();
+}
+function setSort(k){
+  if(ui.sortKey===k) ui.sortDir = ui.sortDir==='asc'?'desc':'asc';
+  else { ui.sortKey=k; ui.sortDir = (k==='date')?'desc':'desc'; }
+  saveUI(); render();
+}
+
+/* ---------- Payout forecast: pending commission by ACTUAL pay date ----------
+   Rolling 12 months from this month. Each month split into the 15th paycheck
+   and the end-of-month paycheck so you can see exactly when money lands and
+   where the income gaps are. */
+function renderForecast(){
+  const el=document.getElementById('forecast');
+  const pending=deals.filter(d=>isActive(d));
+  const noDate=pending.filter(d=>!dealPayout(d)).length;
+  // bucket pending payouts by pay-month + early/end
+  const buckets={}; // key -> {early:{amt,cnt}, end:{amt,cnt}}
+  pending.forEach(d=>{
+    const p=dealPayout(d); if(!p) return;
+    const b=buckets[p.key]=buckets[p.key]||{early:{amt:0,cnt:0},end:{amt:0,cnt:0}};
+    b[p.type].amt+=compute(d).net; b[p.type].cnt++;
+  });
+  // rolling 12 months from current month
+  const now=new Date(); const startY=now.getFullYear(), startM=now.getMonth();
+  const series=[];
+  for(let i=0;i<12;i++){
+    const dt=new Date(startY,startM+i,1);
+    const key=monthKey(dt);
+    const b=buckets[key]||{early:{amt:0,cnt:0},end:{amt:0,cnt:0}};
+    const tot=b.early.amt+b.end.amt;
+    series.push({dt,key,early:b.early,end:b.end,tot,y:dt.getFullYear(),m0:dt.getMonth()});
+  }
+  const max=Math.max(1,...series.map(s=>s.tot));
+  const total=series.reduce((s,x)=>s+x.tot,0);
+  const tiles=series.map(s=>{
+    const lbl=s.dt.toLocaleDateString('en-US',{month:'short',year:'2-digit'});
+    if(s.tot===0){
+      return `<div class="fcmonth gap" title="No payout scheduled — open income gap">
+        <div class="m">${lbl}</div>
+        <div class="amt">—</div>
+        <div class="cnt">no payout</div></div>`;
+    }
+    const sub=[];
+    if(s.early.amt) sub.push(`<div class="fcline"><span class="dot e"></span>15th <b>${money(s.early.amt)}</b> <small style="color:var(--muted)">· ${s.early.cnt}</small></div>`);
+    if(s.end.amt)   sub.push(`<div class="fcline"><span class="dot l"></span>end <b>${money(s.end.amt)}</b> <small style="color:var(--muted)">· ${s.end.cnt}</small></div>`);
+    const nTot=s.early.cnt+s.end.cnt;
+    return `<div class="fcmonth">
+      <div class="m">${lbl}</div>
+      <div class="amt">${money(s.tot)}</div>
+      <div class="cnt">${nTot} payout${nTot>1?'s':''}</div>
+      <div class="fcsplit">${sub.join('')}</div></div>`;
+  }).join('');
+
+  // gap-filler: nearest gap months + the closing windows that would fill them
+  const gaps=series.filter(s=>s.tot===0).slice(0,3);
+  let gapHTML='';
+  if(gaps.length){
+    const rows=gaps.map(s=>{
+      const w=windowsForPayMonth(s.y,s.m0);
+      const ml=s.dt.toLocaleDateString('en-US',{month:'long',year:'numeric'});
+      return `<div class="gaprow">
+        <div class="gapm">${ml} <span class="gapno">— nothing landing</span></div>
+        <div class="gapwin">Close <b>${fmtShort(w.early.from)} – ${fmtShort(w.early.to)}</b> → paid the 15th</div>
+        <div class="gapwin">Close <b>${fmtShort(w.end.from)} – ${fmtShort(w.end.to)}</b> → paid end of month</div>
+      </div>`;
+    }).join('');
+    gapHTML=`<div class="gapbox">
+      <div class="gaphd">🎯 Fill your income gaps — pick a closing date in these windows on your next sale</div>
+      ${rows}</div>`;
+  }
+
+  el.innerHTML=`<div class="fc">
+    <div class="fchead"><h2>📅 Payout Forecast <span style="font-weight:400;color:var(--muted);font-size:12px">— pending commission by the date it actually pays out</span></h2>
+      <span class="tot">${money(total)} pending · next 12 mo${noDate?` · <button class="btn-ghost" style="padding:3px 9px;font-size:11px" onclick="showUndated()">${noDate} undated — add a date</button>`:''}</span></div>
+    <div class="fcgrid">${tiles}</div>
+    ${gapHTML}
+  </div>`;
+}
+
+function renderCards(){
+  const live=deals.filter(d=>!isCanceled(d));
+  const earned=live.reduce((s,d)=>s+compute(d).net,0);
+  const paid=live.filter(d=>isPaid(d)).reduce((s,d)=>s+compute(d).net,0);
+  const backlog=live.filter(d=>isActive(d)).reduce((s,d)=>s+compute(d).net,0);
+  const volume=live.reduce((s,d)=>s+(Number(d.price)||0),0);
+  const canceledCount=deals.filter(d=>isCanceled(d)).length;
+  // ---- monthly goal (drives stretch) + annual goal (high-level) ----
+  const now0=new Date();
+  const thisMonthKey=now0.getFullYear()+'-'+String(now0.getMonth()+1).padStart(2,'0');
+  // annual goal runs on a fiscal year that starts on the chosen month
+  const ysm=Number(settings.yearStartMonth)||1; // 1-12
+  let fyStartYear=now0.getFullYear(); if(now0.getMonth()+1 < ysm) fyStartYear-=1;
+  const fyStart=new Date(fyStartYear, ysm-1, 1), fyEnd=new Date(fyStartYear+1, ysm-1, 1);
+  const inFY=d=>{ if(!d.dateSold) return false; const dt=new Date(d.dateSold+'T00:00'); return dt>=fyStart && dt<fyEnd; };
+  const inMonth=live.filter(d=>!isFlat(d) && monthKeyStr(d.dateSold)===thisMonthKey).reduce((s,d)=>s+saleWeight(d),0);
+  const inYear=live.filter(d=>!isFlat(d) && inFY(d)).reduce((s,d)=>s+saleWeight(d),0);
+  const fyLabel = ysm===1 ? String(fyStartYear)
+    : (fyStart.toLocaleDateString('en-US',{month:'short',year:'2-digit'})+'–'+new Date(fyEnd.getTime()-1).toLocaleDateString('en-US',{month:'short',year:'2-digit'}));
+  const mGoal=goalForMonth(thisMonthKey), aGoal=Number(settings.annualGoal)||0;
+  const mPct=mGoal?Math.min(100,Math.round(inMonth/mGoal*100)):0;
+  const aPct=aGoal?Math.min(100,Math.round(inYear/aGoal*100)):0;
+  const monthStretch=live.filter(d=>monthKeyStr(d.dateSold)===thisMonthKey && compute(d).stretchOn).length;
+  const monthName=now0.toLocaleDateString('en-US',{month:'long'});
+  // next payout: earliest pay date among ACTIVE deals (today onward)
+  const today=new Date(); today.setHours(0,0,0,0);
+  const nextBuckets={};
+  deals.filter(d=>isActive(d)).forEach(d=>{ const p=dealPayout(d); if(!p||p.date<today) return;
+    (nextBuckets[+p.date]=nextBuckets[+p.date]||{amt:0,date:p.date}).amt+=compute(d).net; });
+  const nextKey=Object.keys(nextBuckets).map(Number).sort((a,b)=>a-b)[0];
+  const next=nextKey?nextBuckets[nextKey]:null;
+  const nextCard = next
+    ? `<div class="card hero"><div class="label">💵 Next Payout</div><div class="value green">${money(next.amt)}</div><div class="meta">${fmtShort(next.date)}</div></div>`
+    : `<div class="card hero"><div class="label">💵 Next Payout</div><div class="value" style="color:#cbd3de">—</div><div class="meta">no dated active sales</div></div>`;
+  const activeCount=live.filter(d=>isActive(d)).length;
+  document.getElementById('cards').innerHTML=`
+    ${nextCard}
+    <div class="card"><div class="label">Backlog · sold, not closed</div><div class="value">${money(backlog)}</div><div class="meta">${activeCount} active${canceledCount?' · '+canceledCount+' canceled':''}</div></div>
+    <div class="card ${inMonth>=mGoal&&mGoal>0?'goalhit':''}" style="cursor:pointer" onclick="editMonthGoal('${thisMonthKey}','${esc(monthName)} ${now0.getFullYear()}')" title="Click to set this month's goal">
+      <div class="label">${esc(monthName)} · Monthly Goal ✎</div>
+      <div class="value">${fmtCount(inMonth)}<span style="font-size:14px;color:var(--muted)"> / ${mGoal}</span></div>
+      <div class="goalbar"><span style="width:${mPct}%"></span></div>
+      <div class="meta">${inMonth>=mGoal&&mGoal>0?'🎉 Goal hit'+(monthStretch?' · '+monthStretch+' stretch sale'+(monthStretch>1?'s':''):'')+' — a full sale past goal qualifies for stretch':(fmtCount(mGoal-inMonth))+' more for goal'}</div>
+    </div>
+    <div class="card ${inYear>=aGoal&&aGoal>0?'goalhit':''}" style="cursor:pointer" onclick="editAnnualGoal()" title="Click to set your annual goal">
+      <div class="label">${esc(fyLabel)} · Annual Goal ✎</div>
+      <div class="value">${fmtCount(inYear)}<span style="font-size:14px;color:var(--muted)"> / ${aGoal||'—'}</span></div>
+      <div class="goalbar"><span style="width:${aPct}%"></span></div>
+      <div class="meta">${aGoal>0?(inYear>=aGoal?'🎉 Annual goal hit':(fmtCount(aGoal-inYear))+' to go this year'):'click to set your annual goal'}</div>
+    </div>`;
+  // all-time totals — relocated to the very bottom (top stays forward-looking)
+  const at=document.getElementById('alltime');
+  if(at) at.innerHTML = deals.length ?
+    `<span class="atlabel">All-time</span>`+
+    `<span><b>Earned</b> ${money(earned)}</span>`+
+    `<span><b>Paid out</b> ${money(paid)} · ${live.filter(d=>isPaid(d)).length}</span>`+
+    `<span><b>Sales volume</b> ${money(volume)}</span>` : '';
+}
+
+/* ---------- Year history: accordion of PAST years (current year lives in the ledger above).
+   One year open at a time; opening one closes the rest. Auto-built; nothing is lost. ---------- */
+let openHistYear=null;
+function toggleHistYear(y){ openHistYear = (openHistYear===y)?null:y; renderHistory(); }
+function renderHistory(){
+  const el=document.getElementById('history'); if(!el) return;
+  const aGoal=Number(settings.annualGoal)||0;
+  const curYear=fyWindow(new Date()).year;
+  // group every dated entry by its fiscal year; keep only years before the current one
+  const groups={};
+  deals.forEach(d=>{
+    const dt=dealYearDate(d); if(!dt) return;
+    const y=fyWindow(dt).year; if(y>=curYear) return;
+    const g=groups[y]=groups[y]||{sales:0,comm:0,paid:0,canc:0,items:[]};
+    g.items.push(d);
+    if(isCanceled(d)){ g.canc++; return; }
+    if(!isFlat(d)) g.sales+=saleWeight(d);
+    g.comm+=compute(d).net; if(isPaid(d)) g.paid+=compute(d).net;
+  });
+  const years=Object.keys(groups).map(Number).sort((a,b)=>b-a);
+  if(!years.length){ el.innerHTML=''; return; }
+
+  const items=years.map(y=>{
+    const g=groups[y]; const open=(openHistYear===y);
+    const win=fyWindow(new Date(y,(Number(settings.yearStartMonth)||1)-1,1));
+    const lbl=fyLabelFor(win);
+    const hit=aGoal>0 && g.sales>=aGoal;
+    // detail rows for the year (sorted by date desc)
+    const det=g.items.slice().sort((a,b)=>((b.dateSold||b.payDate||'')).localeCompare(a.dateSold||a.payDate||'')).map(d=>{
+      const c=compute(d), isJr=isFlat(d), canc=isCanceled(d);
+      const tags=[]; if(isJr) tags.push('<span class="tag jr">'+(d.basis==='mentor'?'Mentor':'Junior')+'</span>');
+      else { tags.push('<span class="tag '+(d.type==='presale'?'presale':'regular')+'">'+(d.type==='presale'?'Presale':'Regular')+'</span>');
+        if(d.cross) tags.push('<span class="tag cross">Cross</span>'); if(d.osc) tags.push('<span class="tag osc">OSC</span>'); if(c.stretchOn) tags.push('<span class="tag stretch">Stretch</span>'); }
+      const when=isJr?(d.payDate||''):(d.dateSold||'');
+      return `<tr${canc?' style="opacity:.55"':''}>
+        <td><b class="rowname" tabindex="0" role="button" onclick="openDeal('${d.id}')" onkeydown="if(event.key==='Enter'){openDeal('${d.id}')}">${esc(d.buyer||d.lot||(d.adjNote||'—'))}</b>${d.lot&&d.buyer?'<div class="calcnote">Lot '+esc(d.lot)+'</div>':''}</td>
+        <td>${fmtDate(when)}</td>
+        <td>${tags.join(' ')}</td>
+        <td class="num"${canc?' style="text-decoration:line-through;color:#bbb"':''}>${money(c.net)}</td>
+        <td>${canc?'<span class="pill st-cancel">Canceled</span>':(isPaid(d)?'<span class="pill st-paid">Paid</span>':'<span class="pill st-active">Active</span>')}</td>
+      </tr>`;
+    }).join('');
+    return `<div class="histyear${open?' open':''}">
+      <button class="histhead" aria-expanded="${open}" onclick="toggleHistYear(${y})">
+        <span class="hchev">${open?'▾':'▸'}</span>
+        <span class="hylbl">${lbl}</span>
+        <span class="hstat">${fmtCount(g.sales)}${aGoal?' / '+aGoal:''} sales${hit?' <span class="tag stretch">goal hit</span>':''}${g.canc?' · '+g.canc+' canceled':''}</span>
+        <span class="hcomm">${money(g.comm)}<small> earned · ${money(g.comm-g.paid)} outstanding</small></span>
+      </button>
+      ${open?`<div class="histbody"><table>
+        <thead><tr><th>Buyer / Lot</th><th>Date</th><th>Type</th><th class="num">Net</th><th>Status</th></tr></thead>
+        <tbody>${det}</tbody></table></div>`:''}
+    </div>`;
+  }).join('');
+
+  el.innerHTML=`<div class="tablecard" style="margin-top:22px">
+    <div class="thead"><h2>📚 Year History</h2><span style="font-size:12px;color:var(--muted)">past years · click to expand</span></div>
+    <div class="histlist">${items}</div></div>`;
+}
+
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function fmtDate(s){if(!s)return '<span style="color:#bbb">—</span>';const d=new Date(s+'T00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}
+
+/* ---------- Deal modal ---------- */
+function openDeal(id){
+  editingId=id||null;
+  const ov=document.getElementById('dealOverlay');
+  document.getElementById('dealTitle').textContent=id?'Edit Sale':'Add Sale';
+  document.getElementById('delBtn').style.visibility=id?'visible':'hidden';
+  const d = id ? deals.find(x=>x.id===id) : {type:'regular',basis:'standard'};
+  g('f_basis').value=d.basis||'standard';
+  g('f_buyer').value=d.buyer||''; g('f_lot').value=d.lot||''; g('f_price').value=d.price||'';
+  g('f_comm').value=d.community||''; g('f_sold').value=d.dateSold||'';
+  g('f_close').value=d.estClose||''; g('f_type').value=d.type||'regular';
+  g('f_seller').value=d.sellingRep||''; g('f_jramt').value=d.juniorAmt||'';
+  g('f_paydate').value=d.payDate||'';
+  g('f_adj').value=d.adj||''; g('f_adjnote').value=d.adjNote||'';
+  g('f_cross').checked=!!d.cross; g('f_osc').checked=!!d.osc;
+  g('f_status').value=d.status || (d.paid?'paid':'active');
+  g('f_cancelnote').value=d.cancelNote||'';
+  g('f_stretch').checked = id ? !!d.stretch : false;
+  basisChange(); statusChange();
+  ov.classList.add('show'); liveCalc();
+}
+function statusChange(){ g('cancelWrap').style.display = g('f_status').value==='canceled' ? 'block' : 'none'; }
+function basisChange(){
+  const b = g('f_basis').value;
+  const flat = (b==='junior'||b==='mentor');
+  g('jrFields').style.display = flat ? 'grid' : 'none';
+  g('stdFields').style.display = flat ? 'none' : 'block';
+  // flat bonuses have no price or closing — hide those, payout date lives in jrFields
+  ['f_price','f_sold','f_close'].forEach(fid=>{ const f=g(fid).closest('.field'); if(f) f.style.display = flat?'none':'block'; });
+  if(flat){
+    const isM = b==='mentor';
+    g('f_seller_lbl').textContent = isM ? 'Mentee (rep)' : 'Rep you assisted';
+    g('f_seller').placeholder = isM ? 'e.g. Jenn Flood' : 'e.g. Veronica Roanhouse';
+    g('f_jramt_lbl').textContent = isM ? 'Mentor bonus ($)' : 'Junior bonus ($)';
+    if(!g('f_jramt').value) g('f_jramt').placeholder=String(isM?settings.mentorBonus:settings.juniorBonus);
+  }
+  liveCalc();
+}
+function closeDeal(){document.getElementById('dealOverlay').classList.remove('show')}
+function openHelp(){ document.getElementById('helpOverlay').classList.add('show'); }
+function closeHelp(){ document.getElementById('helpOverlay').classList.remove('show'); localStorage.setItem('ct_seen_help','1'); }
+function g(id){return document.getElementById(id)}
+
+function liveCalc(){
+  const basis=g('f_basis').value;
+  const draft={
+    basis, price:g('f_price').value, type:g('f_type').value,
+    cross:g('f_cross').checked, osc:g('f_osc').checked, stretch:g('f_stretch').checked,
+    adj:g('f_adj').value, juniorAmt:g('f_jramt').value
+  };
+  const c=compute(draft);
+  const lines=[];
+  if(basis==='junior'||basis==='mentor'){
+    lines.push(`<div class="row"><span>${basis==='mentor'?'Mentor':'Junior-rep'} flat bonus</span><span>${money(c.bonus)}</span></div>`);
+    if(c.adj) lines.push(`<div class="row"><span>Adjustment</span><span class="${c.adj<0?'neg':''}">${c.adj<0?'−':'+'}${money(Math.abs(c.adj))}</span></div>`);
+    lines.push(`<div class="row tot"><span>Net credit</span><span>${money(c.net)}</span></div>`);
+    g('livecalc').innerHTML=lines.join(''); g('stretchHint').textContent='';
+    g('payoutReadout').style.display='none'; return;
+  }
+  lines.push(`<div class="row"><span>Base rate (${draft.type==='presale'?'presale':'regular'})</span><span>${pct(c.baseRate)}</span></div>`);
+  if(draft.stretch) lines.push(`<div class="row"><span>Stretch bonus</span><span>+${pct(settings.stretchRate)}</span></div>`);
+  lines.push(`<div class="row"><span>Effective rate × price</span><span>${money(c.gross)}</span></div>`);
+  if(draft.cross) lines.push(`<div class="row"><span>Cross-sale split (50%)</span><span>${money(c.afterSplit)}</span></div>`);
+  if(c.oscDed) lines.push(`<div class="row"><span>OSC fee ${draft.cross?'(½ of $'+settings.oscFee+')':''}</span><span class="neg">−${money(c.oscDed)}</span></div>`);
+  if(c.adj) lines.push(`<div class="row"><span>Adjustment</span><span class="${c.adj<0?'neg':''}">${c.adj<0?'−':'+'}${money(Math.abs(c.adj))}</span></div>`);
+  lines.push(`<div class="row tot"><span>Net commission</span><span>${money(c.net)}</span></div>`);
+  g('livecalc').innerHTML=lines.join('');
+  // stretch eligibility hint — weighted month progress (cross = ½). Stretch is manual.
+  const sold=g('f_sold').value;
+  let hint='';
+  if(sold){
+    const key=monthKeyStr(sold); const goal=goalForMonth(key);
+    const curW=weightedInMonth(key); // existing entries this month (excludes the unsaved draft)
+    const mname=new Date(sold+'T00:00').toLocaleDateString('en-US',{month:'long'});
+    if(goal>0){
+      hint = `${mname}: ${fmtCount(curW)} / ${goal} counted so far. `+
+        (curW>=goal ? 'Goal already hit — a full sale past goal earns stretch; check the box if this one qualifies.'
+                    : 'Stretch unlocks on a full sale once you pass the goal.');
+    }
+  }
+  g('stretchHint').textContent=hint;
+  // payout-date readout from the est. closing date
+  const ro=g('payoutReadout'); const close=g('f_close').value;
+  const p=payoutInfo(close);
+  if(p){
+    const when = p.type==='early' ? 'the 15th' : 'the end of the month';
+    ro.className='payout-readout';
+    ro.innerHTML=`💵 Closing ${fmtShort(new Date(close+'T00:00'))} pays out <b>${fmtShort(p.date)}</b> (${when}). `+
+      `Commission sheet due in DHI Sales by <b>${fmtShort(p.deadline)}</b> or it slips a cycle.`;
+    ro.style.display='block';
+  } else { ro.style.display='none'; }
+}
+
+function saveDeal(){
+  const basis0=g('f_basis').value;
+  // gentle validation so a blank/$0 entry can't be saved by accident
+  if(basis0==='standard'){
+    if(!(Number(g('f_price').value)>0)){ toast('Enter the sales price first',true); g('f_price').focus(); return; }
+    if(!g('f_sold').value){ toast('Pick the Date Sold first',true); g('f_sold').focus(); return; }
+  } else {
+    if(!(Number(g('f_jramt').value||settings.juniorBonus)>0)){ toast('Enter the bonus amount',true); g('f_jramt').focus(); return; }
+  }
+  const d={
+    id:editingId||uid(),
+    basis:g('f_basis').value,
+    buyer:g('f_buyer').value.trim(),
+    lot:g('f_lot').value.trim(),
+    community:g('f_comm').value.trim(),
+    price:Number(g('f_price').value)||0,
+    dateSold:g('f_sold').value, estClose:g('f_close').value,
+    type:g('f_type').value, cross:g('f_cross').checked, osc:g('f_osc').checked,
+    sellingRep:g('f_seller').value.trim(),
+    juniorAmt:g('f_jramt').value===''?null:Number(g('f_jramt').value),
+    payDate:g('f_paydate').value,
+    stretch:g('f_stretch').checked,
+    adj:Number(g('f_adj').value)||0, adjNote:g('f_adjnote').value.trim(),
+    status:g('f_status').value, paid:g('f_status').value==='paid',
+    cancelNote:g('f_status').value==='canceled'?g('f_cancelnote').value.trim():''
+  };
+  if(!editingId) d._seq=Date.now();
+  else { const old=deals.find(x=>x.id===editingId); d._seq=old._seq||Date.now(); }
+  if(editingId){ deals=deals.map(x=>x.id===editingId?d:x); } else { deals.push(d); }
+  save(); closeDeal(); render();
+}
+function deleteCurrent(){ if(editingId&&confirm('Delete this entry?')){deals=deals.filter(x=>x.id!==editingId);save();closeDeal();render();} }
+// pill click toggles Active <-> Paid (the common action). Canceled is set in the editor.
+function cycleStatus(id){
+  const d=deals.find(x=>x.id===id); if(!d) return;
+  if(isCanceled(d)){ openDeal(id); return; } // edit to un-cancel
+  if(isActive(d)){
+    d.status='paid'; d.paid=true; save(); render();
+    const amt=compute(d).net; const p=dealPayout(d);
+    toast('🎉 +'+money(amt)+(p?' — paid '+fmtShort(p.date):' marked paid'));
+  } else { d.status='active'; d.paid=false; save(); render(); }
+}
+
+/* ---------- Settings ---------- */
+function openSettings(){
+  g('s_mgoal').value=settings.monthlyGoal; g('s_agoal').value=settings.annualGoal;
+  g('s_ystart').value=settings.yearStartMonth||1;
+  g('s_reg').value=settings.regRate; g('s_pre').value=settings.preRate;
+  g('s_stretch').value=settings.stretchRate; g('s_osc').value=settings.oscFee;
+  g('s_junior').value=settings.juniorBonus; g('s_mentor').value=settings.mentorBonus;
+  document.getElementById('setOverlay').classList.add('show');
+}
+function toggleRates(){
+  const p=g('ratesPanel'); const open=p.style.display==='none';
+  p.style.display=open?'block':'none';
+  g('ratesBtn').textContent='Rates & fees (rarely change) '+(open?'▴':'▾');
+}
+function closeSettings(){document.getElementById('setOverlay').classList.remove('show')}
+function saveSettings(){
+  settings.monthlyGoal=Number(g('s_mgoal').value)||0; settings.annualGoal=Number(g('s_agoal').value)||0;
+  settings.yearStartMonth=Number(g('s_ystart').value)||1;
+  settings.regRate=Number(g('s_reg').value); settings.preRate=Number(g('s_pre').value);
+  settings.stretchRate=Number(g('s_stretch').value); settings.oscFee=Number(g('s_osc').value);
+  settings.juniorBonus=Number(g('s_junior').value); settings.mentorBonus=Number(g('s_mentor').value);
+  save(); closeSettings(); render();
+}
+
+/* ---------- CSV ---------- */
+async function exportCSV(){
+  const head=['Buyer','Lot','Community','Date Sold','Est Closing','Pay Date','Sales Price','Commission Type','Sale Type','Cross Sale','OSC Lead','Stretch','Selling Rep','Flat Bonus','Adjustment','Adj Note','Effective Rate %','Net Commission','Status'];
+  const lines=[head.join(',')];
+  deals.slice().sort((a,b)=>(a.dateSold||'').localeCompare(b.dateSold||'')).forEach(d=>{
+    const c=compute(d);
+    const jr=isFlat(d);
+    lines.push([d.buyer,d.lot,d.community,d.dateSold,d.estClose,d.payDate||'',jr?'':d.price,d.basis||'standard',jr?'':d.type,d.cross?'Y':'N',d.osc?'Y':'N',c.stretchOn?'Y':'N',d.sellingRep||'',jr?c.bonus:'',d.adj||0,d.adjNote,jr?'flat':c.rate,c.net.toFixed(2),dealStatus(d)]
+      .map(v=>`"${(v??'').toString().replace(/"/g,'""')}"`).join(','));
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const fname='commission_tracker_'+new Date().toISOString().slice(0,10)+'.csv';
+  const file=new File([blob],fname,{type:'text/csv'});
+  if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+    try{ await navigator.share({files:[file],title:'Commission Tracker Export'}); return; }
+    catch(e){ if(e.name==='AbortError') return; }
+  }
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=fname;a.click();
+}
+function importCSV(e){
+  const file=e.target.files[0]; if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    const rows=r.result.split(/\r?\n/).filter(x=>x.trim());
+    rows.slice(1).forEach(line=>{
+      const f=parseCSVLine(line); if(f.length<7)return;
+      const bt=(f[7]||'standard').toLowerCase();
+      const basis= bt.includes('men')?'mentor' : (bt.includes('jun')?'junior':'standard');
+      const stRaw=(f[18]||'').toLowerCase();
+      const status= stRaw.includes('cancel')?'canceled' : (stRaw.includes('paid')||/^y/.test(stRaw)?'paid':'active');
+      deals.push({id:uid(),basis,buyer:f[0],lot:f[1],community:f[2],dateSold:f[3],estClose:f[4],payDate:f[5]||'',price:Number(f[6])||0,
+        type:(f[8]||'regular').toLowerCase().includes('pre')?'presale':'regular',
+        cross:/y/i.test(f[9]||''),osc:/y/i.test(f[10]||''),
+        stretchOverride:/y/i.test(f[11]||'')?true:null,sellingRep:f[12]||'',
+        juniorAmt:f[13]?Number(f[13]):null,adj:Number(f[14])||0,adjNote:f[15]||'',
+        status,paid:status==='paid',_seq:Date.now()+Math.random()});
+    });
+    save();render();toast('✓ Imported '+(rows.length-1)+' rows');
+  };
+  r.readAsText(file); e.target.value='';
+}
+function parseCSVLine(line){
+  const out=[];let cur='',q=false;
+  for(let i=0;i<line.length;i++){const ch=line[i];
+    if(q){if(ch==='"'){if(line[i+1]==='"'){cur+='"';i++}else q=false}else cur+=ch}
+    else{if(ch===','){out.push(cur);cur=''}else if(ch==='"')q=true;else cur+=ch}}
+  out.push(cur);return out.map(s=>s.trim());
+}
+
+// list the active entries that still need a date to forecast
+function showUndated(){
+  const names=deals.filter(d=>isActive(d) && !dealPayout(d))
+    .map(d=>d.buyer||d.lot||(d.adjNote||'entry')).slice(0,8);
+  if(!names.length){ toast('Everything has a date — nice.'); return; }
+  toast('Add a '+(names.length?'closing/payout':'')+' date to: '+names.join(', '));
+}
+
+/* ---------- startup ---------- */
+async function init(){
+  const fEl=g('filter'); if(fEl) fEl.value=ui.filter;
+  const sEl=g('search'); if(sEl) sEl.value=ui.search;
+  render();
+  updateSyncUI('local');
+  await tryReconnect(); // reload from the synced file if one is connected
+  if(!localStorage.getItem('ct_seen_help')){ openHelp(); localStorage.setItem('ct_seen_help','1'); } // first-run tour, once
+}
+// click the dark backdrop or press Esc to close any dialog
+document.querySelectorAll('.overlay').forEach(ov=>ov.addEventListener('mousedown',e=>{ if(e.target===ov) ov.classList.remove('show'); }));
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.overlay.show').forEach(o=>o.classList.remove('show')); });
+init();
+</script>
+</body>
+</html>
