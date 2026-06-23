@@ -284,7 +284,7 @@
       <div class="payout-readout" id="payoutReadout" style="display:none"></div>
       <!-- Junior / Mentor flat-bonus fields -->
       <div class="grid2" id="jrFields" style="display:none">
-        <div class="field"><label id="f_seller_lbl">Rep you assisted</label><input id="f_seller" placeholder="e.g. Veronica Roanhouse"></div>
+        <div class="field"><label id="f_seller_lbl">Rep you assisted</label><input id="f_seller" placeholder="e.g. Alex Rivera"></div>
         <div class="field"><label id="f_jramt_lbl">Flat bonus ($)</label><input id="f_jramt" type="number" oninput="liveCalc()" placeholder="500"></div>
         <div class="field"><label>Payout date <small style="font-weight:400;color:var(--muted)">when it pays</small></label><input id="f_paydate" type="date" oninput="liveCalc()"></div>
       </div>
@@ -407,33 +407,9 @@
 <script>
 /* ---------- Storage ---------- */
 const LS_DEALS='ct_deals_v1', LS_SET='ct_settings_v1';
-let deals = load(LS_DEALS, null);
-if(deals===null){ // first run: seed with sample lots from the DRH tracker
-  deals = [
-    {id:uid_seed('a'),buyer:'',lot:'1131',community:'Collins Ridge',price:390800,
-     dateSold:'2026-05-06',estClose:'2026-06-30',type:'regular',cross:false,osc:false,
-     adj:0,adjNote:'',paid:false,_seq:1},
-    {id:uid_seed('b'),buyer:'',lot:'84',community:'Collins Ridge',price:426990,
-     dateSold:'2026-05-26',estClose:'2027-01-30',type:'regular',cross:false,osc:false,
-     adj:0,adjNote:'',paid:false,_seq:2},
-    {id:uid_seed('c'),basis:'junior',buyer:'Hassan Barati',lot:'89',community:'Belle Grove',
-     price:339990,dateSold:'2026-03-26',estClose:'',type:'regular',cross:false,osc:false,
-     sellingRep:'Veronica Roanhouse',juniorAmt:500,adjNote:'Darwin A2 · junior-rep credit',
-     adj:0,paid:false,_seq:0}
-  ];
-  localStorage.setItem(LS_DEALS,JSON.stringify(deals));
-}
-// one-time injection of the Belle Grove junior-rep credit for installs seeded before it existed
-if(!localStorage.getItem('ct_seed_jr')){
-  if(!deals.some(d=>d.id==='seed_c')){
-    deals.push({id:'seed_c',basis:'junior',buyer:'Hassan Barati',lot:'89',community:'Belle Grove',
-      price:339990,dateSold:'2026-03-26',estClose:'',type:'regular',cross:false,osc:false,
-      sellingRep:'Veronica Roanhouse',juniorAmt:500,adjNote:'Darwin A2 · junior-rep credit',adj:0,paid:false,_seq:0});
-    localStorage.setItem(LS_DEALS,JSON.stringify(deals));
-  }
-  localStorage.setItem('ct_seed_jr','1');
-}
-function uid_seed(s){return 'seed_'+s}
+// starts empty — reps add their own sales (or Upload / Connect their data file)
+let deals = load(LS_DEALS, []);
+if(!Array.isArray(deals)) deals=[];
 let settings = Object.assign({
   monthlyGoal:3, annualGoal:24, yearStartMonth:1, monthGoals:{}, regRate:1.75, preRate:2.0, stretchRate:0.25,
   oscFee:500, juniorBonus:500, mentorBonus:500
@@ -1058,7 +1034,7 @@ function basisChange(){
   if(flat){
     const isM = b==='mentor';
     g('f_seller_lbl').textContent = isM ? 'Mentee (rep)' : 'Rep you assisted';
-    g('f_seller').placeholder = isM ? 'e.g. Jenn Flood' : 'e.g. Veronica Roanhouse';
+    g('f_seller').placeholder = isM ? 'e.g. Sam Lee' : 'e.g. Alex Rivera';
     g('f_jramt_lbl').textContent = isM ? 'Mentor bonus ($)' : 'Junior bonus ($)';
     if(!g('f_jramt').value) g('f_jramt').placeholder=String(isM?settings.mentorBonus:settings.juniorBonus);
   }
